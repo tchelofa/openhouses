@@ -1,9 +1,9 @@
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { PropertySchema, PartialPropertySchema } from '../lib/ZodSchemas';
 import { send } from 'process';
+import prisma from '../lib/prismaConfig';
 
-const prisma = new PrismaClient();
 
 // CREATE
 export async function newProperty(id: string, request: FastifyRequest, reply: FastifyReply) {

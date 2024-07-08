@@ -5,7 +5,7 @@ import propertiesRoute from "./routes/propertyRoute";
 import fastifyJwt from "@fastify/jwt";
 import authRoute from "./routes/authRoute";
 import messageRoutes from "./routes/messageRoute";
-
+import 'dotenv'
 import fastifyStatic from "@fastify/static";
 
 const app = fastify()
@@ -35,6 +35,9 @@ app.register(fastifyJwt, {
 app.register(require('@fastify/cors'), {
     origin: "*"
 });
+
+
+const url = process.env("DATABASE_URL")
 
 const port = 3333
 

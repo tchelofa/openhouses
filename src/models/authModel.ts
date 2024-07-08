@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from "fastify"
 import { z } from "zod"
-import { PrismaClient } from "@prisma/client"
+import prisma from '../lib/prismaConfig';
 import bcrypt, { hash } from 'bcrypt'
 // import { recoveryEmail } from '../helpers/emails/emails'
 import { v4 as uuidv4 } from 'uuid';
@@ -17,8 +17,6 @@ const logSchema = z.object({
     status: z.enum(['SUCCESS', 'DENY']).default("SUCCESS"),
     userId: z.string()
 })
-
-const prisma = new PrismaClient()
 
 export async function signin(request: FastifyRequest, reply: FastifyReply) {
 
