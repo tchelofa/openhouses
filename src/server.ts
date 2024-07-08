@@ -37,7 +37,8 @@ app.register(require('@fastify/cors'), {
 });
 
 
-const url = process.env("DATABASE_URL")
+const url = process.env.DATABASE_URL; 
+console.log(url)
 
 const port = 3333
 
