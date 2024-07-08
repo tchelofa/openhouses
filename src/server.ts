@@ -5,8 +5,9 @@ import propertiesRoute from "./routes/propertyRoute";
 import fastifyJwt from "@fastify/jwt";
 import authRoute from "./routes/authRoute";
 import messageRoutes from "./routes/messageRoute";
-import 'dotenv'
+import dotenv from 'dotenv';
 import fastifyStatic from "@fastify/static";
+dotenv.config();
 
 const app = fastify()
 
@@ -18,8 +19,8 @@ app.register(authRoute, { prefix: '/auth' })
 
 
 app.register(fastifyStatic, {
-    root: path.join(__dirname, 'uploads/properties'), // Adjust path as needed
-    prefix: '/uploads/properties', // Set a clear prefix for image requests
+    root: path.join(__dirname, 'uploads/properties'), // Ajuste o caminho conforme necessário
+    prefix: '/uploads/properties/', // Adicione uma barra no final para evitar problemas de rota
 });
 
 
@@ -33,7 +34,9 @@ app.register(fastifyJwt, {
 
 
 app.register(require('@fastify/cors'), {
-    origin: "localhost:80"
+    origin: "*", // Permitir todas as origens. Para produção, configure isso de acordo com as necessidades.
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 });
 
 
