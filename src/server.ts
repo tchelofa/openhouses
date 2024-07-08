@@ -33,7 +33,7 @@ app.register(fastifyJwt, {
 
 
 app.register(require('@fastify/cors'), {
-    origin: "*"
+    origin: "localhost:80"
 });
 
 
