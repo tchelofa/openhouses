@@ -34,10 +34,12 @@ app.register(fastifyJwt, {
 
 
 app.register(require('@fastify/cors'), {
-    origin: "https://openhouses.ie", // Permitir todas as origens. Para produção, configure isso de acordo com as necessidades.
+    origin: "https://openhouses.ie",
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: true
-});
+    allowedHeaders: true, // Permitir todos os headers
+    preflightContinue: false, // Responder diretamente às requisições OPTIONS sem passar para o roteador
+    optionsSuccessStatus: 204 // Define o código de status para as respostas OPTIONS bem-sucedidas
+});;
 
 
 const url = process.env.DATABASE_URL; 
