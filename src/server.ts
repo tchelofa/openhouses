@@ -36,13 +36,13 @@ app.register(require('@fastify/cors'), {
     origin: "http://localhost:3000"
 });
 
-
+const port = 3333
 
 app.listen({
     port: 3333
 })
     .then(() => {
-        console.log('Server running at port 3333')
+        console.log(`Server running at ${port}`)
     })
     .catch(err => {
         console.error(err);
