@@ -15,7 +15,7 @@ const app = fastify()
 app.register(cors, {
     origin: "*",
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders:[]
+    allowedHeaders:['*']
 })
 
 
@@ -37,14 +37,6 @@ app.register(fastifyJwt, {
         complete: true
     }
 });
-
-
-
-
-
-
-const url = process.env.DATABASE_URL;
-console.log(url)
 
 const port = 3333
 
