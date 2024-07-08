@@ -33,7 +33,7 @@ app.register(fastifyJwt, {
 
 
 app.register(require('@fastify/cors'), {
-    origin: "http://localhost:3000"
+    origin: "*"
 });
 
 const port = 3333
