@@ -34,7 +34,7 @@ app.register(fastifyJwt, {
 
 
 app.register(require('@fastify/cors'), {
-    origin: "https://openhouses.ie",
+    origin: "*",
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: true, // Permitir todos os headers
     preflightContinue: false, // Responder diretamente às requisições OPTIONS sem passar para o roteador
