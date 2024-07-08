@@ -7,9 +7,16 @@ import authRoute from "./routes/authRoute";
 import messageRoutes from "./routes/messageRoute";
 import dotenv from 'dotenv';
 import fastifyStatic from "@fastify/static";
+import cors from '@fastify/cors'
+
 dotenv.config();
 
 const app = fastify()
+app.register(cors, {
+    origin: "*",
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders:[]
+})
 
 
 app.register(userRoutes, { prefix: '/users' })
@@ -33,16 +40,10 @@ app.register(fastifyJwt, {
 
 
 
-app.register(require('@fastify/cors'), {
-    origin: "*",
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: true, // Permitir todos os headers
-    preflightContinue: false, // Responder diretamente às requisições OPTIONS sem passar para o roteador
-    optionsSuccessStatus: 204 // Define o código de status para as respostas OPTIONS bem-sucedidas
-});;
 
 
-const url = process.env.DATABASE_URL; 
+
+const url = process.env.DATABASE_URL;
 console.log(url)
 
 const port = 3333
