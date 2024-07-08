@@ -1,0 +1,198 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int            @id @default(autoincrement())
+  publicId        String         @unique @default(uuid())
+  name            String
+  urlAvatar       String?
+  description     String?
+  mobile          String
+  address         String?
+  neighborhood    String?
+  city            String?
+  county          String?
+  country         String?
+  postcode        String?
+  email           String         @unique
+  password        String
+  loginAttempt    Int
+  accountStatus   accountStatusE
+  accountType     accountTypeE
+  acceptMarketing Boolean
+
+  logLogins         logsLogin[]
+  property          Property[]
+  verificationToken verifyToken[]
+  sentMessages      Message[]     @relation("UserFrom")
+  receivedMessages  Message[]     @relation("UserTo")
+  favorites FavoriteProperty[]
+
+  lastLoginAt       DateTime?
+  passwordUpdatedAt DateTime?
+
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@map("users")
+}
+
+model Property {
+  id       Int    @id @default(autoincrement())
+  publicId String @unique @default(uuid())
+
+  title       String
+  description String
+
+  address      String
+  neighborhood String
+  city         String
+  county       String
+  country      String
+  postcode     String
+
+  price        String
+  propertyType propertyTypeE
+  rooms        String
+  capacity     String
+  toilets      String
+  externalArea String
+
+  electricityFee String
+  wifiFee        String
+  rubbishFee     String
+  depositFee     String
+
+  timeRefundDeposit String
+
+  availableAtInit DateTime
+  availableAtEnd  DateTime
+
+  active       Boolean
+  businessType BusinessType
+
+  user   User           @relation(fields: [userId], references: [publicId], onDelete: Cascade)
+  userId String
+  images PropertyImgs[]
+  favorites FavoriteProperty[]
+
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@map("properties")
+}
+
+model PropertyImgs {
+  id       Int    @id @default(autoincrement())
+  publicId String @unique @default(uuid())
+  url      String
+
+  property   Property @relation(fields: [propertyId], references: [publicId], onDelete: Cascade)
+  propertyId String
+
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@map("property_images")
+}
+
+model FavoriteProperty{
+  id       Int    @id @default(autoincrement())
+  publicId String @unique @default(uuid())
+
+  property   Property @relation(fields: [propertyId], references: [publicId], onDelete: Cascade)
+  propertyId String
+
+  user   User           @relation(fields: [userId], references: [publicId], onDelete: Cascade)
+  userId String
+}
+
+model logsLogin {
+  id          Int          @id @default(autoincrement())
+  ipAddress   String
+  loginStatus loginStatusE
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@map("log_logins")
+}
+
+model verifyToken {
+  id         Int             @id @default(autoincrement())
+  publicId   String          @unique @default(uuid())
+  token      String          @unique
+  type       VerifyTokenType
+  expiration DateTime
+  isUsed     Boolean         @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+
+  @@map("verify_tokens")
+}
+
+model Message {
+  id         Int            @id @default(autoincrement())
+  publicId   String         @unique @default(uuid())
+  userFromId String
+  userToId   String
+  message    String
+  status     MessageStatusE
+  createdAt  DateTime       @default(now())
+
+  userFrom User @relation("UserFrom", fields: [userFromId], references: [publicId], onDelete: Cascade)
+  userTo   User @relation("UserTo", fields: [userToId], references: [publicId], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+enum loginStatusE {
+  Accept
+  Deny
+}
+
+enum accountTypeE {
+  TENANT
+  ADVISOR
+}
+
+enum accountStatusE {
+  Activated
+  Inactivated
+}
+
+enum propertyTypeE {
+  FLAT
+  HOUSE
+  SINGLEROOM
+  SHAREDROOM
+  DOUBLEROOM
+}
+
+enum VerifyTokenType {
+  ACTIVATION
+  RESET
+}
+
+enum MessageStatusE {
+  SENT
+  READ
+}
+
+enum BusinessType {
+  RENT
+  SELL
+}
