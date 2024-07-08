@@ -34,7 +34,7 @@ app.register(fastifyJwt, {
 
 
 app.register(require('@fastify/cors'), {
-    origin: "*", // Permitir todas as origens. Para produção, configure isso de acordo com as necessidades.
+    origin: "https://openhouses.ie", // Permitir todas as origens. Para produção, configure isso de acordo com as necessidades.
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: true
 });
