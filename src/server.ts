@@ -8,6 +8,8 @@ import messageRoutes from "./routes/messageRoute";
 import dotenv from 'dotenv';
 import fastifyStatic from "@fastify/static";
 import cors from '@fastify/cors'
+import multipart from '@fastify/multipart';
+import { UploadController } from "./controllers/uploadController";
 
 dotenv.config();
 
@@ -18,16 +20,15 @@ app.register(cors, {
     allowedHeaders:['*']
 })
 
-
-app.register(userRoutes, { prefix: '/users' })
-app.register(propertiesRoute, { prefix: '/properties' })
-app.register(messageRoutes, { prefix: '/messages' })
-app.register(authRoute, { prefix: '/auth' })
-
+app.register(multipart, {
+    limits: {
+        fileSize: 3 * 1024 * 1024, // 3MB
+      },
+});
 
 app.register(fastifyStatic, {
     root: path.join(__dirname, 'uploads/properties'), // Ajuste o caminho conforme necessário
-    prefix: '/uploads/properties/', // Adicione uma barra no final para evitar problemas de rota
+    prefix: '/properties/images/', // Adicione uma barra no final para evitar problemas de rota
 });
 
 
@@ -39,6 +40,13 @@ app.register(fastifyJwt, {
 });
 
 const port = 3333
+
+app.register(userRoutes, { prefix: '/users' })
+app.register(propertiesRoute, { prefix: '/properties' })
+app.register(messageRoutes, { prefix: '/messages' })
+app.register(authRoute, { prefix: '/auth' })
+app.register(UploadController, {prefix: '/uploads'})
+
 
 app.listen({
     port: 3333,
