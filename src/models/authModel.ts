@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 const signInSchema = z.object({
     email: z.string(),
-    emailV:z.string(),
+    emailV: z.string().optional(),
     password: z.string()
 })
 
@@ -22,7 +22,9 @@ const logSchema = z.object({
 export async function signin(request: FastifyRequest, reply: FastifyReply) {
 
     const { email, password } = signInSchema.parse(request.body)
-    const emailV = email.toLowerCase()
+
+    const emailV = email.toLowerCase().toString()
+
     try {
 
         const user = await prisma.user.findFirst({

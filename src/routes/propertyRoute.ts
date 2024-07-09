@@ -16,7 +16,7 @@ export default async function PropertyRoutes(app: FastifyInstance) {
     
     app.put('/toogleproperty/:id', ToogleProperty);
 
-    app.get('/favorites/:userId ', FavoriteProperties)
+    app.get('/favorites/:userId', FavoriteProperties)
     
     app.get('/checkFavorite/:id/:userId', IsFavorite)
 

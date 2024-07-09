@@ -1,7 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { PropertySchema, PartialPropertySchema } from '../lib/ZodSchemas';
-import { send } from 'process';
 import prisma from '../lib/prismaConfig';
 
 
@@ -141,7 +140,7 @@ export async function getPropertiesFilter(request: FastifyRequest, reply: Fastif
         if (businessType) {
             filters.businessType = businessType;
         }
-
+        console.log(filters)
         const properties = await prisma.property.findMany({
             where: filters,
             orderBy: {
@@ -159,7 +158,6 @@ export async function getPropertiesFilter(request: FastifyRequest, reply: Fastif
     }
 }
 
-// UPDATE
 export async function updateProperty(id: string, request: FastifyRequest, reply: FastifyReply) {
     try {
         const parseResult = PartialPropertySchema.safeParse(request.body);
@@ -195,7 +193,6 @@ export async function updateProperty(id: string, request: FastifyRequest, reply:
     }
 }
 
-// DELETE
 export async function deleteProperty(id: string, request: FastifyRequest, reply: FastifyReply) {
     try {
         await prisma.property.delete({
@@ -214,7 +211,6 @@ export async function deleteProperty(id: string, request: FastifyRequest, reply:
         });
     }
 }
-
 
 export async function toogleProperty(id: string, request: FastifyRequest, reply: FastifyReply) {
     try {
@@ -309,6 +305,7 @@ export async function getImagesProperty(id: string, request: FastifyRequest, rep
 }
 
 export async function favoriteProperties(userId: string, request: FastifyRequest, reply: FastifyReply) {
+    console.log(userId)
     try {
         const favorites = await prisma.favoriteProperty.findMany({
             where: {
@@ -341,7 +338,6 @@ export async function getPropertyDetails(propertyId: string, request: FastifyReq
         });
     }
 }
-
 
 export async function isFavorite(id: string, userId: string, request: FastifyRequest, reply: FastifyReply){
     try {

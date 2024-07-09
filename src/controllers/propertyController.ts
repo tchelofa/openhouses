@@ -51,6 +51,7 @@ export async function ToggleFavoriteProperty(request: FastifyRequest, reply: Fas
 
 export async function FavoriteProperties(request: FastifyRequest, reply: FastifyReply) {
     const { userId } = request.params as {  userId: string }; // ID from params
+    console.log(userId)
     try {
         const result = await favoriteProperties(userId, request, reply);
         reply.send(result);
