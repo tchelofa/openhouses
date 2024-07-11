@@ -16,6 +16,7 @@ export async function newProperty(id: string, request: FastifyRequest, reply: Fa
                 message: 'Validation error',
                 errors: parseResult.error.errors,
             });
+            console.log(parseResult.error.errors)
             return;
         }
 
@@ -76,17 +77,10 @@ export async function newProperty(id: string, request: FastifyRequest, reply: Fa
             },
         });
 
-        reply.status(201).send({
-            status: 'success',
-            message: 'Property created successfully',
-            data: newProperty,
-        });
+        console.log(newProperty)
+        return({newProperty})
     } catch (error) {
-        reply.status(500).send({
-            status: 'error',
-            message: 'Internal server error',
-            error: error instanceof Error ? error.message : 'Unknown error',
-        });
+        return false
     }
 }
 

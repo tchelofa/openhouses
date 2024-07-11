@@ -87,7 +87,7 @@ export class UserController {
     }
 
     try {
-      const newUser = await userService.updateUser(Number(id), result.data);
+      const newUser = await userService.updateUser(String(id), result.data);
       reply.status(201).send({
         status: 'success',
         message: 'User updated successfully',
@@ -107,7 +107,13 @@ export class UserController {
 
   async deleteUser(request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
     const { id } = request.params;
-    await userService.deleteUser(Number(id));
+    await userService.deleteUser(String(id));
     reply.status(204).send();
+  }
+  
+  async activateAccount(request: FastifyRequest<{ Params: { userId: string, token:string } }>, reply: FastifyReply){
+    const { userId, token } = request.params;
+    const activate = await userService.activateAccount(userId, token, request, reply)
+    reply.status(activate?.code || 500).send(activate?.message)
   }
 }

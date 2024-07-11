@@ -11,4 +11,5 @@ export default async function userRoutes(app: FastifyInstance){
     app.post('/new', userController.createUser.bind(userController));
     app.put('/update/:id', userController.updateUser.bind(userController))
     app.delete('/delete/:id', userController.deleteUser.bind(userController))
+    app.put('/activateAccount/:userId/:token', userController.activateAccount.bind(userController))
 }

@@ -1,6 +1,11 @@
 import { Prisma } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import prisma from '../lib/prismaConfig';
+import sendEmail from '../lib/email/config';
+import { v4 as uuidv4 } from 'uuid';
+
+import { welcomeEmail } from '../lib/email/emails'
+import { FastifyReply, FastifyRequest } from 'fastify';
 
 export class UserService {
   async getAllUsers(query: any) {
@@ -47,13 +52,37 @@ export class UserService {
           email: data.email,
           password: hashPassword,
           loginAttempt: data.loginAttempt,
-          accountStatus: data.accountStatus,
+          accountStatus: 'Inactivated',
           accountType: data.accountType,
           acceptMarketing: data.acceptMarketing,
           lastLoginAt: data.lastLoginAt ?? null,
           passwordUpdatedAt: data.passwordUpdatedAt ?? null,
         },
       });
+
+      if (newUser) {
+        const token = uuidv4()
+        const data = new Date()
+        data.setHours(data.getHours() + 2)
+
+        const verify = await prisma.verifyToken.create({
+          data: {
+            token,
+            expiration: data,
+            type: "ACTIVATION",
+            userId: newUser.publicId,
+            isUsed: false
+          }
+        })
+
+        try {
+          const html = welcomeEmail(newUser.name, newUser.publicId, token)
+          const email = await sendEmail("OpenHouses", "welcome@openhouses.ie", newUser.email, "Welcome to OpenHouses", html, html)
+        } catch (error) {
+
+        }
+      }
+
       return true;
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -70,14 +99,69 @@ export class UserService {
     }
   }
 
-  async updateUser(id: number, data: any) {
+  async updateUser(publicId: string, data: any) {
     return prisma.user.update({
-      where: { id },
+      where: { publicId },
       data,
     });
   }
 
-  async deleteUser(id: number) {
-    await prisma.user.delete({ where: { id } });
+  async deleteUser(publicId: string) {
+    await prisma.user.delete({ where: { publicId } });
+  }
+
+  async activateAccount(userId: string, token: string, request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const activate = await prisma.verifyToken.findFirst({
+        where: {
+          userId,
+          token
+        }
+      })
+
+      if (activate?.isUsed == true) {
+        reply.status(403).send({ message: "Invalid Token, please get in touch with tecnical support." })
+      } else {
+        const verifyUser = await prisma.user.findFirst({
+          where: {
+            publicId: userId
+          }
+        })
+        if (verifyUser?.accountStatus == 'Activated') {
+          reply.status(400).send({ message: "Your account have been activated." })
+        } else {
+          const updateUser = await prisma.user.update({
+            where: {
+              publicId: userId
+            },
+            data: {
+              accountStatus: "Activated"
+            }
+          })
+
+
+          if (updateUser.accountStatus == "Activated") {
+            const updateToken = await prisma.verifyToken.update({
+              where: {
+                token
+              },
+              data: {
+                isUsed: true
+              }
+            })
+            console.log("updateToken: " + updateToken)
+            reply.status(200).send({ message: "Account activated with success!" })
+          }
+        }
+
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        return ({
+          code: 400,
+          message: error.message
+        })
+      }
+    }
   }
 }
