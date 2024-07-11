@@ -4,6 +4,8 @@ import prisma from '../lib/prismaConfig';
 import bcrypt, { hash } from 'bcrypt'
 // import { recoveryEmail } from '../helpers/emails/emails'
 import { v4 as uuidv4 } from 'uuid';
+import sendEmail from "../lib/email/config";
+import { loginFailedEmail, loginSuccessEmail } from "../lib/email/emails";
 // import sendEmail from "../helpers/emails/config"
 
 const signInSchema = z.object({
@@ -29,19 +31,19 @@ export async function signin(request: FastifyRequest, reply: FastifyReply) {
 
         const user = await prisma.user.findFirst({
             where: {
-                email:emailV
+                email: emailV
             }
         })
 
-        
+
 
         if (user) {
 
             const hashPassword = await bcrypt.compare(password, user.password)
 
             if (hashPassword) {
-                if(user?.accountStatus == "Inactivated"){
-                    return reply.status(401).send({ message: "You need verify your account first." })
+                if (user?.accountStatus == "Inactivated") {
+                    return reply.status(401).send({ message: "You have to verify your account first, check your email." })
                 }
 
                 const token = await reply.jwtSign({
@@ -62,6 +64,14 @@ export async function signin(request: FastifyRequest, reply: FastifyReply) {
                     token: token,
                     id: user.publicId
                 }
+                const now = new Date();
+                const dateTime = now.toLocaleString('en-IE', {
+                    dateStyle: 'full', // 'full', 'long', 'medium', 'short'
+                    timeStyle: 'short', // 'full', 'long', 'medium', 'short'
+                    hour12: true // Use 12-hour time format
+                });
+                const html = loginSuccessEmail(user.name, dateTime)
+                sendEmail("OpenHouses Security", "security@openhouses.ie", user.email, "Login Successful", html, html)
                 return data
             } else {
                 const log = await prisma.logsLogin.create({
@@ -72,7 +82,8 @@ export async function signin(request: FastifyRequest, reply: FastifyReply) {
 
                     }
                 })
-
+                const html = loginFailedEmail(user.name)
+                sendEmail("OpenHouses", "security@openhouses.ie", user.email, "Login Attempt Failed", html, html)
                 return reply.status(401).send({ message: "Email or password invalid!" })
             }
 
@@ -111,7 +122,7 @@ export async function recoveryPassword(request: FastifyRequest, reply: FastifyRe
             data: {
                 token,
                 type: 'RESET',
-                userId: user.id,
+                userId: user.publicId,
                 expiration: data,
             }
         })
@@ -147,8 +158,8 @@ export async function validateRecoveryToken(request: FastifyRequest, reply: Fast
 
         if (!req) {
             return reply.status(404).send({ message: 'Invalid Token' })
-        }else{
-            if(req.isUsed == true){
+        } else {
+            if (req.isUsed == true) {
                 return reply.status(400).send({ message: 'Invalid Token' })
             }
         }
@@ -158,10 +169,10 @@ export async function validateRecoveryToken(request: FastifyRequest, reply: Fast
         }
 
         const updateToken = await prisma.verifyToken.update({
-            where:{
+            where: {
                 token
             },
-            data:{
+            data: {
                 isUsed: true
             }
         })

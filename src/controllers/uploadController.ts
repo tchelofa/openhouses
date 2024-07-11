@@ -39,18 +39,18 @@ export async function UploadController(app: FastifyInstance) {
                     });
 
                     if (uploadedBytes > MAX_FILE_SIZE) {
-                        console.error(`File: ${uniqueFilename} exceeds maximum size (2MB)`);
+                        console.error(`File: ${uniqueFilename} exceeds maximum size (3MB)`);
                         reply.code(413).send({
                             statusCode: 413,
                             error: 'Payload Too Large',
-                            message: `File: ${uniqueFilename} exceeds maximum size (2MB). Please upload files under 2MB.`,
+                            message: `File: ${uniqueFilename} exceeds maximum size (3MB). Please upload files under 3MB.`,
                         });
                         continue; // Skip processing this file and continue to the next one
                     }
 
                     const filePath = path.join(__dirname, `../uploads/${uploadFolder}`, uniqueFilename);
                     await pump(data, fs.createWriteStream(filePath));
-                    const saveImage = await uploadPropertyImages(propertyId, uniqueFilename, reply)
+                    const saveImage = await uploadPropertyImages(propertyId, uniqueFilename, reply);
                     console.log(`File uploaded: ${saveImage}`);
                 } else {
                     // It's a field
@@ -63,11 +63,12 @@ export async function UploadController(app: FastifyInstance) {
                 message: 'Files uploaded successfully.',
             });
         } catch (error) {
-            if (error instanceof Error) { // Use type guard to check for Error type
-                console.error('Error message:', error.message);
-            } else {
-                console.error('Unexpected error:', error);
-            }
+            console.error('Error during file upload:', error);
+            reply.code(500).send({
+                statusCode: 500,
+                error: 'Internal Server Error',
+                message: 'An error occurred during file upload.',
+            });
         }
     });
 }

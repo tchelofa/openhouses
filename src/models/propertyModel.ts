@@ -2,21 +2,15 @@ import { Prisma } from '@prisma/client';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { PropertySchema, PartialPropertySchema } from '../lib/ZodSchemas';
 import prisma from '../lib/prismaConfig';
-
+import { sendSuccess, sendError } from '../utils/response';
 
 // CREATE
 export async function newProperty(id: string, request: FastifyRequest, reply: FastifyReply) {
     try {
         const parseResult = PropertySchema.safeParse(request.body);
 
-
         if (!parseResult.success) {
-            reply.status(400).send({
-                status: 'error',
-                message: 'Validation error',
-                errors: parseResult.error.errors,
-            });
-            console.log(parseResult.error.errors)
+            sendError(reply, 400, 'Validation error', parseResult.error);
             return;
         }
 
@@ -77,10 +71,9 @@ export async function newProperty(id: string, request: FastifyRequest, reply: Fa
             },
         });
 
-        console.log(newProperty)
-        return({newProperty})
+        sendSuccess(reply, 'Property created successfully', newProperty);
     } catch (error) {
-        return false
+        sendError(reply, 500, 'Internal server error', error);
     }
 }
 
@@ -98,13 +91,9 @@ export async function getProperties(request: FastifyRequest, reply: FastifyReply
             where: filters,
         });
 
-        reply.status(200).send({ properties });
+        sendSuccess(reply, 'Properties retrieved successfully', properties);
     } catch (error) {
-        reply.status(500).send({
-            status: 'error',
-            message: 'Internal server error',
-            error: error instanceof Error ? error.message : 'Unknown error',
-        });
+        sendError(reply, 500, 'Internal server error', error);
     }
 }
 
@@ -142,13 +131,9 @@ export async function getPropertiesFilter(request: FastifyRequest, reply: Fastif
             },
         });
 
-        reply.status(200).send({ properties });
+        sendSuccess(reply, 'Filtered properties retrieved successfully', properties);
     } catch (error) {
-        reply.status(500).send({
-            status: 'error',
-            message: 'Internal server error',
-            error: error instanceof Error ? error.message : 'Unknown error',
-        });
+        sendError(reply, 500, 'Internal server error', error);
     }
 }
 
@@ -157,11 +142,7 @@ export async function updateProperty(id: string, request: FastifyRequest, reply:
         const parseResult = PartialPropertySchema.safeParse(request.body);
 
         if (!parseResult.success) {
-            reply.status(400).send({
-                status: 'error',
-                message: 'Validation error',
-                errors: parseResult.error.errors,
-            });
+            sendError(reply, 400, 'Validation error', parseResult.error);
             return;
         }
 
@@ -173,17 +154,9 @@ export async function updateProperty(id: string, request: FastifyRequest, reply:
             data: updateData,
         });
 
-        reply.status(200).send({
-            status: 'success',
-            message: 'Property updated successfully',
-            data: updatedProperty,
-        });
+        sendSuccess(reply, 'Property updated successfully', updatedProperty);
     } catch (error) {
-        reply.status(500).send({
-            status: 'error',
-            message: 'Internal server error',
-            error: error instanceof Error ? error.message : 'Unknown error',
-        });
+        sendError(reply, 500, 'Internal server error', error);
     }
 }
 
@@ -193,16 +166,9 @@ export async function deleteProperty(id: string, request: FastifyRequest, reply:
             where: { publicId: id },
         });
 
-        reply.status(200).send({
-            status: 'success',
-            message: 'Property deleted successfully',
-        });
+        sendSuccess(reply, 'Property deleted successfully');
     } catch (error) {
-        reply.status(500).send({
-            status: 'error',
-            message: 'Internal server error',
-            error: error instanceof Error ? error.message : 'Unknown error',
-        });
+        sendError(reply, 500, 'Internal server error', error);
     }
 }
 
@@ -218,7 +184,7 @@ export async function toogleProperty(id: string, request: FastifyRequest, reply:
                     active: false
                 }
             })
-            return property.active
+            sendSuccess(reply, 'Property deactivated successfully');
         } else {
             await prisma.property.update({
                 where: { publicId: id },
@@ -226,15 +192,11 @@ export async function toogleProperty(id: string, request: FastifyRequest, reply:
                     active: true
                 }
             })
-            return property?.active
+            sendSuccess(reply, 'Property activated successfully');
         }
 
     } catch (error) {
-        reply.status(500).send({
-            status: 'error',
-            message: 'Internal server error',
-            error: error instanceof Error ? error.message : 'Unknown error',
-        });
+        sendError(reply, 500, 'Internal server error', error);
     }
 }
 
@@ -260,7 +222,7 @@ export async function toggleFavoriteProperty(id: string, userId: string, request
                         id: verifyIsFavorite.id
                     }
                 })
-                reply.send(false)
+                sendSuccess(reply, 'Property removed from favorites', false);
             }else{
                 await prisma.favoriteProperty.create({
                     data:{
@@ -268,16 +230,13 @@ export async function toggleFavoriteProperty(id: string, userId: string, request
                         propertyId:verifyProperty.publicId
                     }
                 })
-                reply.send(true)
+                sendSuccess(reply, 'Property added to favorites', true);
             }
+        } else {
+            sendError(reply, 404, 'Property not found');
         }
     } catch (error) {
-        console.error('Error toggling favorite property:', error);
-        reply.status(500).send({
-            status: 'error',
-            message: 'Internal server error',
-            error: error instanceof Error ? error.message : 'Unknown error',
-        });
+        sendError(reply, 500, 'Internal server error', error);
     }
 }
 
@@ -288,13 +247,9 @@ export async function getImagesProperty(id: string, request: FastifyRequest, rep
                 propertyId: id
             }
         })
-        reply.status(200).send({ images });
+        sendSuccess(reply, 'Property images retrieved successfully', images);
     } catch (error) {
-        reply.status(500).send({
-            status: 'error',
-            message: 'Internal server error',
-            error: error instanceof Error ? error.message : 'Unknown error',
-        });
+        sendError(reply, 500, 'Internal server error', error);
     }
 }
 
@@ -306,13 +261,9 @@ export async function favoriteProperties(userId: string, request: FastifyRequest
                 userId
             }
         })
-        reply.status(200).send({ favorites });
+        sendSuccess(reply, 'Favorite properties retrieved successfully', favorites);
     } catch (error) {
-        reply.status(500).send({
-            status: 'error',
-            message: 'Internal server error',
-            error: error instanceof Error ? error.message : 'Unknown error',
-        });
+        sendError(reply, 500, 'Internal server error', error);
     }
 }
 
@@ -323,13 +274,9 @@ export async function getPropertyDetails(propertyId: string, request: FastifyReq
                 publicId: propertyId,
             },
         });
-        reply.status(200).send({ property });
+        sendSuccess(reply, 'Property details retrieved successfully', property);
     } catch (error) {
-        reply.status(500).send({
-            status: 'error',
-            message: 'Internal server error',
-            error: error instanceof Error ? error.message : 'Unknown error',
-        });
+        sendError(reply, 500, 'Internal server error', error);
     }
 }
 
@@ -343,12 +290,8 @@ export async function isFavorite(id: string, userId: string, request: FastifyReq
                 ]
             }
         })
-        if(isfavorite){
-            reply.send(true)
-        }else{
-            reply.send(false)
-        }
+        sendSuccess(reply, 'Favorite status retrieved successfully', !!isfavorite);
     } catch (error) {
-        
+        sendError(reply, 500, 'Internal server error', error);
     }
 }

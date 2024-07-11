@@ -4,7 +4,7 @@ import prisma from '../lib/prismaConfig';
 import sendEmail from '../lib/email/config';
 import { v4 as uuidv4 } from 'uuid';
 
-import { welcomeEmail } from '../lib/email/emails'
+import { userActivationEmail, welcomeEmail } from '../lib/email/emails'
 import { FastifyReply, FastifyRequest } from 'fastify';
 
 export class UserService {
@@ -149,7 +149,8 @@ export class UserService {
                 isUsed: true
               }
             })
-            console.log("updateToken: " + updateToken)
+            const html = userActivationEmail(updateUser.name)
+            sendEmail("OpenHouses", "welcome@openhouses.ie", updateUser.email, "Your account was activated successfully!", html, html)
             reply.status(200).send({ message: "Account activated with success!" })
           }
         }

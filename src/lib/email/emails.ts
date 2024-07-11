@@ -204,3 +204,146 @@ export function recoveryEmail(resetToken: string) {
 
     return email
 }
+
+export function loginSuccessEmail(name: string, dateTime: string) {
+    const email = `<!DOCTYPE html>
+    <html>
+    
+    <head>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                margin: 0;
+                padding: 0;
+            }
+    
+            .container {
+                width: 80%;
+                max-width: 600px;
+                margin: 20px auto;
+                background-color: #ffffff;
+                padding: 20px;
+                border-radius: 5px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            }
+    
+            h1 {
+                color: #1e90ff;
+                /* Blue */
+            }
+    
+            p {
+                color: #333333;
+                /* Black */
+            }
+    
+            .button {
+                display: inline-block;
+                padding: 10px 20px;
+                background-color: #1e90ff;
+                /* Blue */
+                color: #ffffff;
+                text-decoration: none;
+                border-radius: 5px;
+            }
+    
+            .footer {
+                margin-top: 20px;
+                color: #666666;
+                /* Gray */
+            }
+        </style>
+    </head>
+    
+    <body>
+        <div class="container">
+            <h1>Login Successful</h1>
+            <p>Dear ${name},</p>
+            <p>We are pleased to inform you that a login attempt to your OpenHouses account was successful. Here are the details:</p>
+            <p><strong>Date and Time:</strong> ${dateTime}</p>
+            <p>If this was not you, please secure your account immediately by changing your password and contacting our support team.</p>
+            <a class="button" style='color: #fff;' href="https://openhouses.ie/auth/signin">Login to OpenHouses</a>
+            <p class="footer">Best regards,<br />The OpenHouses Team</p>
+        </div>
+    </body>
+    
+    </html>
+    `
+    return email;
+}
+
+export function loginFailedEmail(name: string) {
+    const now = new Date();
+    const dateTime = now.toLocaleString('en-IE', {
+        dateStyle: 'full', // 'full', 'long', 'medium', 'short'
+        timeStyle: 'short', // 'full', 'long', 'medium', 'short'
+        hour12: true // Use 12-hour time format
+    });
+
+    const email = `<!DOCTYPE html>
+    <html>
+    
+    <head>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                margin: 0;
+                padding: 0;
+            }
+    
+            .container {
+                width: 80%;
+                max-width: 600px;
+                margin: 20px auto;
+                background-color: #ffffff;
+                padding: 20px;
+                border-radius: 5px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            }
+    
+            h1 {
+                color: #ff6347;
+                /* Red */
+            }
+    
+            p {
+                color: #333333;
+                /* Black */
+            }
+    
+            .button {
+                display: inline-block;
+                padding: 10px 20px;
+                background-color: #ff6347;
+                /* Red */
+                color: #ffffff;
+                text-decoration: none;
+                border-radius: 5px;
+            }
+    
+            .footer {
+                margin-top: 20px;
+                color: #666666;
+                /* Gray */
+            }
+        </style>
+    </head>
+    
+    <body>
+        <div class="container">
+            <h1>Login Attempt Failed</h1>
+            <p>Dear ${name},</p>
+            <p>We noticed a failed login attempt to your OpenHouses account. Here are the details:</p>
+            <p><strong>Date and Time:</strong> ${dateTime}</p>
+            <p>If this was not you, we recommend that you secure your account immediately by changing your password.</p>
+            <a class="button" style='color: #fff;' href="https://openhouses.ie/auth/reset-password">Change Password</a>
+            <p class="footer">Best regards,<br />The OpenHouses Team</p>
+        </div>
+    </body>
+    
+    </html>
+    `
+    return email;
+}
