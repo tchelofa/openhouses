@@ -35,8 +35,7 @@ export async function GetImagesProperty(request: FastifyRequest, reply: FastifyR
 
 export async function ToggleFavoriteProperty(request: FastifyRequest, reply: FastifyReply) {
     const { id, userId } = request.params as { id: string; userId: string }; // ID from params
-    console.log("ID " + id)
-    console.log("userid " + userId)
+
     try {
         const result = await toggleFavoriteProperty(id, userId, request, reply);
         reply.send(result);
@@ -51,7 +50,6 @@ export async function ToggleFavoriteProperty(request: FastifyRequest, reply: Fas
 
 export async function FavoriteProperties(request: FastifyRequest, reply: FastifyReply) {
     const { userId } = request.params as {  userId: string }; // ID from params
-    console.log(userId)
     try {
         const result = await favoriteProperties(userId, request, reply);
         reply.send(result);

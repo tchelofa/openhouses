@@ -51,10 +51,6 @@ export async function UploadController(app: FastifyInstance) {
                     const filePath = path.join(__dirname, `../uploads/${uploadFolder}`, uniqueFilename);
                     await pump(data, fs.createWriteStream(filePath));
                     const saveImage = await uploadPropertyImages(propertyId, uniqueFilename, reply);
-                    console.log(`File uploaded: ${saveImage}`);
-                } else {
-                    // It's a field
-                    console.log(`Field ${part.fieldname}: ${part.value}`);
                 }
             }
 

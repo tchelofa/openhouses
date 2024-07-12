@@ -123,7 +123,7 @@ export async function getPropertiesFilter(request: FastifyRequest, reply: Fastif
         if (businessType) {
             filters.businessType = businessType;
         }
-        console.log(filters)
+
         const properties = await prisma.property.findMany({
             where: filters,
             orderBy: {
@@ -249,7 +249,7 @@ export async function getImagesProperty(id: string, request: FastifyRequest, rep
 }
 
 export async function favoriteProperties(userId: string, request: FastifyRequest, reply: FastifyReply) {
-    console.log(userId)
+
     try {
         const favorites = await prisma.favoriteProperty.findMany({
             where: {
