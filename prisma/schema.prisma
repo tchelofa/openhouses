@@ -30,9 +30,9 @@ model User {
   logLogins         logsLogin[]
   property          Property[]
   verificationToken verifyToken[]
-  sentMessages      Message[]     @relation("UserFrom")
-  receivedMessages  Message[]     @relation("UserTo")
-  favorites FavoriteProperty[]
+  sentMessages      Message[]          @relation("UserFrom")
+  receivedMessages  Message[]          @relation("UserTo")
+  favorites         FavoriteProperty[]
 
   lastLoginAt       DateTime?
   passwordUpdatedAt DateTime?
@@ -77,9 +77,9 @@ model Property {
   active       Boolean
   businessType BusinessType
 
-  user   User           @relation(fields: [userId], references: [publicId], onDelete: Cascade)
-  userId String
-  images PropertyImgs[]
+  user      User               @relation(fields: [userId], references: [publicId], onDelete: Cascade)
+  userId    String
+  images    PropertyImgs[]
   favorites FavoriteProperty[]
 
   updatedAt DateTime @updatedAt
@@ -102,14 +102,14 @@ model PropertyImgs {
   @@map("property_images")
 }
 
-model FavoriteProperty{
+model FavoriteProperty {
   id       Int    @id @default(autoincrement())
   publicId String @unique @default(uuid())
 
   property   Property @relation(fields: [propertyId], references: [publicId], onDelete: Cascade)
   propertyId String
 
-  user   User           @relation(fields: [userId], references: [publicId], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [publicId], onDelete: Cascade)
   userId String
 }
 
@@ -138,7 +138,7 @@ model verifyToken {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user   User @relation(fields: [userId], references: [publicId], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [publicId], onDelete: Cascade)
   userId String
 
   @@map("verify_tokens")

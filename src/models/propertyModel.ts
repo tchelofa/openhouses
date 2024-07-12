@@ -200,43 +200,38 @@ export async function toogleProperty(id: string, request: FastifyRequest, reply:
     }
 }
 
-export async function toggleFavoriteProperty(id: string, userId: string, request: FastifyRequest, reply: FastifyReply) {
+export async function toggleFavoriteProperty(id: string, userId:string, request: FastifyRequest, reply: FastifyReply) {
+
     try {
-        const verifyProperty = await prisma.property.findFirst({
+        const existingFavorite = await prisma.favoriteProperty.findFirst({
             where: {
-                publicId: id
+                propertyId: id,
+                userId: userId,
             }
-        })
-        if (verifyProperty) {
-            const verifyIsFavorite = await prisma.favoriteProperty.findFirst({
+        });
+
+        if (existingFavorite) {
+            await prisma.favoriteProperty.delete({
                 where: {
-                    AND: [
-                        { propertyId: verifyProperty.publicId },
-                        { userId: verifyProperty.userId }
-                    ]
-                },
-            })
-            if (verifyIsFavorite) {
-                await prisma.favoriteProperty.delete({
-                    where: {
-                        id: verifyIsFavorite.id
-                    }
-                })
-                sendSuccess(reply, 'Property removed from favorites', false);
-            }else{
-                await prisma.favoriteProperty.create({
-                    data:{
-                        userId: userId,
-                        propertyId:verifyProperty.publicId
-                    }
-                })
-                sendSuccess(reply, 'Property added to favorites', true);
-            }
+                    id: existingFavorite.id,
+                }
+            });
+            reply.send(false);
         } else {
-            sendError(reply, 404, 'Property not found');
+            await prisma.favoriteProperty.create({
+                data: {
+                    userId: userId,
+                    propertyId: id,
+                }
+            });
+            reply.send(true);
         }
     } catch (error) {
-        sendError(reply, 500, 'Internal server error', error);
+        reply.status(500).send({
+            status: 'error',
+            message: 'Internal server error',
+            error: error instanceof Error ? error.message : 'Unknown error',
+        });
     }
 }
 
@@ -280,18 +275,21 @@ export async function getPropertyDetails(propertyId: string, request: FastifyReq
     }
 }
 
-export async function isFavorite(id: string, userId: string, request: FastifyRequest, reply: FastifyReply){
+export async function isFavorite(id: string, userId:string, request: FastifyRequest, reply: FastifyReply) {
+
     try {
-        const isfavorite = await prisma.favoriteProperty.findFirst({
-            where:{
-                AND:[
-                    {propertyId:id},
-                    {userId}
-                ]
+        const result = await prisma.favoriteProperty.findFirst({
+            where: {
+                propertyId: id,
+                userId: userId,
             }
-        })
-        sendSuccess(reply, 'Favorite status retrieved successfully', !!isfavorite);
+        });
+        reply.send(Boolean(result));
     } catch (error) {
-        sendError(reply, 500, 'Internal server error', error);
+        reply.status(500).send({
+            status: 'error',
+            message: 'Internal server error',
+            error: error instanceof Error ? error.message : 'Unknown error',
+        });
     }
 }

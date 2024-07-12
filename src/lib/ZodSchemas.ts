@@ -73,4 +73,5 @@ export const MessageSchema = z.object({
   userToId: z.string(),
   message: z.string().min(1, "Message is required"),
   status: z.enum(["SENT", "READ"]),
+  publicId: z.string()
 });
