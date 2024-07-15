@@ -124,6 +124,12 @@ export async function getPropertiesFilter(request: FastifyRequest, reply: Fastif
         if (businessType) {
             filters.businessType = businessType;
         }
+        
+        if (userId) {
+            filters.userId = userId;
+        }
+
+        console.log(filters)
 
         const properties = await prisma.property.findMany({
             where: filters,
@@ -201,7 +207,7 @@ export async function toogleProperty(id: string, request: FastifyRequest, reply:
     }
 }
 
-export async function toggleFavoriteProperty(id: string, userId:string, request: FastifyRequest, reply: FastifyReply) {
+export async function toggleFavoriteProperty(id: string, userId: string, request: FastifyRequest, reply: FastifyReply) {
 
     try {
         const existingFavorite = await prisma.favoriteProperty.findFirst({
@@ -276,7 +282,7 @@ export async function getPropertyDetails(propertyId: string, request: FastifyReq
     }
 }
 
-export async function isFavorite(id: string, userId:string, request: FastifyRequest, reply: FastifyReply) {
+export async function isFavorite(id: string, userId: string, request: FastifyRequest, reply: FastifyReply) {
 
     try {
         const result = await prisma.favoriteProperty.findFirst({
