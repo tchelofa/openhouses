@@ -101,12 +101,13 @@ export async function getPropertiesFilter(request: FastifyRequest, reply: Fastif
     try {
         const filters: Prisma.PropertyWhereInput = {};
 
-        const { searchTerm, businessType, address, city, county } = request.query as {
+        const { searchTerm, businessType, address, city, county, userId } = request.query as {
             searchTerm?: string;
             businessType?: 'RENT' | 'SELL';
             address?: string;
             city?: string;
             county?: string;
+            userId?: string
         };
 
         if (searchTerm && searchTerm.length >= 3) {
