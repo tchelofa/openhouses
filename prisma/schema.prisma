@@ -118,8 +118,8 @@ model logsLogin {
   ipAddress   String
   loginStatus loginStatusE
 
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId Int
+  user   User @relation(fields: [userId], references: [publicId], onDelete: Cascade)
+  userId String
 
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())

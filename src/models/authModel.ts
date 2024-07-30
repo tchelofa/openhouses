@@ -5,7 +5,7 @@ import bcrypt, { hash } from 'bcrypt'
 // import { recoveryEmail } from '../helpers/emails/emails'
 import { v4 as uuidv4 } from 'uuid';
 import sendEmail from "../lib/email/config";
-import { loginFailedEmail, loginSuccessEmail } from "../lib/email/emails";
+import { loginFailedEmail, loginSuccessEmail, recoveryEmail } from "../lib/email/emails";
 // import sendEmail from "../helpers/emails/config"
 
 const signInSchema = z.object({
@@ -54,7 +54,7 @@ export async function signin(request: FastifyRequest, reply: FastifyReply) {
                     data: {
                         ipAddress: '000000',
                         loginStatus: 'Accept',
-                        userId: user.id
+                        userId: user.publicId
 
                     }
 
@@ -64,13 +64,16 @@ export async function signin(request: FastifyRequest, reply: FastifyReply) {
                     token: token,
                     id: user.publicId
                 }
+
                 const now = new Date();
                 const dateTime = now.toLocaleString('en-IE', {
                     dateStyle: 'full', // 'full', 'long', 'medium', 'short'
                     timeStyle: 'short', // 'full', 'long', 'medium', 'short'
                     hour12: true // Use 12-hour time format
                 });
+
                 const html = loginSuccessEmail(user.name, dateTime)
+
                 sendEmail("OpenHouses Security", "security@openhouses.ie", user.email, "Login Successful", html, html)
                 return data
             } else {
@@ -78,7 +81,7 @@ export async function signin(request: FastifyRequest, reply: FastifyReply) {
                     data: {
                         ipAddress: '000000',
                         loginStatus: 'Deny',
-                        userId: user.id
+                        userId: user.publicId
 
                     }
                 })
@@ -115,7 +118,7 @@ export async function recoveryPassword(request: FastifyRequest, reply: FastifyRe
         })
 
         if (!user) {
-            return reply.status(404).send({ message: 'User Not Found' })
+            return reply.status(404).send({ message: 'If your email was registered with us, you will recive an email with instructions.' })
         }
 
         const req = await prisma.verifyToken.create({
@@ -127,20 +130,12 @@ export async function recoveryPassword(request: FastifyRequest, reply: FastifyRe
             }
         })
 
-        // const html = recoveryEmail(token)
+        const html = recoveryEmail(token)
 
-        // sendEmail('Wedo Assist', 'no-reply@wedoassist.com.br', user?.email, 'Password Recovery', html, html)
+        sendEmail("OpenHouses", "security@openhouses.ie", user.email, "Recovery your password", html, html)
 
-        // const log = await prisma.logsLogin.create({
-        //     data: {
-        //         originIp: '0000000',
-        //         status: "SUCCESS",
-        //         type: "RECOVERY",
-        //         userId: user.id
-        //     }
-        // })
+        return reply.status(200).send({ message: 'If your email was registered with us, you will recive an email with instructions.' })
 
-        return reply.status(200).send({ message: 'Check your email.' })
     } catch (error) {
         if (error instanceof Error) {
             return reply.status(400).send({ message: error.message })
@@ -182,6 +177,36 @@ export async function validateRecoveryToken(request: FastifyRequest, reply: Fast
     } catch (error) {
         if (error instanceof Error) {
             return reply.status(400).send({ message: error.message })
+        }
+    }
+}
+
+export async function changePassword(request: FastifyRequest, reply: FastifyReply, token: string, password: string) {
+    try {
+        const req = await prisma.verifyToken.findFirst({
+            where: { token }
+        });
+
+        if (!req) {
+            return reply.status(404).send({ message: 'Invalid Token' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        await prisma.user.update({
+            where: { publicId: req.userId },
+            data: { password: hashedPassword }
+        });
+
+        await prisma.verifyToken.update({
+            where: { token },
+            data: { isUsed: true }
+        });
+
+        return reply.status(200).send({ message: 'Password has been successfully changed' });
+    } catch (error) {
+        if (error instanceof Error) {
+            return reply.status(400).send({ message: error.message });
         }
     }
 }

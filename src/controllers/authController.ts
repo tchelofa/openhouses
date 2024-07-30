@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify"
-import { recoveryPassword, signin, validateRecoveryToken } from "../models/authModel"
+import { changePassword, recoveryPassword, signin, validateRecoveryToken } from "../models/authModel"
 import { UserController } from "../controllers/userController"
 
 export async function signIn(request: FastifyRequest, reply: FastifyReply) {
@@ -23,4 +23,9 @@ export async function validateToken(request: FastifyRequest, reply: FastifyReply
     } catch (err) {
         return reply.status(401).send({ valid: false })
     }
+}
+
+export async function resetPassword(request: FastifyRequest, reply: FastifyReply) {
+    const { token, password } = request.body as { token: string, password: string };
+    return await changePassword(request, reply, token, password);
 }

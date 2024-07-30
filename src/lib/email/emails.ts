@@ -193,7 +193,7 @@ export function recoveryEmail(resetToken: string) {
             <p>Dear User,</p>
             <p>You have requested to reset your password for OpenHouses account.</p>
             <p>To reset your password, please click on the following link:</p>
-            <a class="button" style='color: #fff;' href="https://openhouses.ie/auth/changepassword/${resetToken}">Reset Password</a>
+            <a class="button" style='color: #fff;' href="https://openhouses.ie/auth/change-password/${resetToken}">Reset Password</a>
             <p>If you did not request this password reset, please ignore this email. Your password will remain unchanged.</p>
             <p class="footer">Best regards,<br />The OpenHouses Team</p>
         </div>

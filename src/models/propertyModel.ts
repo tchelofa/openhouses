@@ -129,8 +129,6 @@ export async function getPropertiesFilter(request: FastifyRequest, reply: Fastif
             filters.userId = userId;
         }
 
-        console.log(filters)
-
         const properties = await prisma.property.findMany({
             where: filters,
             orderBy: {

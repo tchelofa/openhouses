@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify"
-import { recovery, signIn, validateToken, validatedRecovery } from "../controllers/authController"
+import { recovery, resetPassword, signIn, validateToken, validatedRecovery } from "../controllers/authController"
 
 export default async function userRoutes(app: FastifyInstance) {
     app.post('/signin', (request, reply) => {
@@ -19,4 +19,8 @@ export default async function userRoutes(app: FastifyInstance) {
     app.post('/token-validate', (request, reply) => {
         return validateToken(request, reply)
     })
+
+    app.post('/reset-password', (request, reply) => {
+        return resetPassword(request, reply);
+    });
 }
