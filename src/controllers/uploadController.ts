@@ -1,9 +1,9 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import * as fs from 'fs'; // Use fs for synchronous operations
+import * as fs from 'fs';
 import * as util from 'util';
 import { pipeline } from 'stream';
 import path from 'path';
-import { uploadPropertyImages } from '../models/uploadModel';
+import { deletePropertyImage, uploadPropertyImages } from '../models/uploadModel';
 
 const pump = util.promisify(pipeline);
 const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3 Megabytes in bytes
@@ -16,12 +16,10 @@ export async function UploadController(app: FastifyInstance) {
         fs.mkdirSync(path.join(__dirname, `../uploads/${uploadFolder}`), { recursive: true });
     } catch (error) {
         console.error('Error creating upload directory:', error);
-        // Handle error appropriately (e.g., stop server or prevent uploads)
     }
 
     app.post('/multiplefiles/:propertyId', async (request: FastifyRequest, reply: FastifyReply) => {
-
-        const {propertyId} = request.params as { propertyId: string }
+        const { propertyId } = request.params as { propertyId: string };
 
         try {
             const parts = request.parts();
@@ -29,7 +27,7 @@ export async function UploadController(app: FastifyInstance) {
             for await (const part of parts) {
                 if (part.type === 'file') {
                     const data = part.file;
-                    const sanitizedFilename = path.parse(part.filename).base.replace(/[^a-zA-Z0-9_\.]/g, '_'); // Exclude dot from replacement
+                    const sanitizedFilename = path.parse(part.filename).base.replace(/[^a-zA-Z0-9_\.]/g, '_');
                     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
                     const uniqueFilename = `${uniqueSuffix}-${sanitizedFilename}`;
 
@@ -45,7 +43,7 @@ export async function UploadController(app: FastifyInstance) {
                             error: 'Payload Too Large',
                             message: `File: ${uniqueFilename} exceeds maximum size (3MB). Please upload files under 3MB.`,
                         });
-                        continue; // Skip processing this file and continue to the next one
+                        continue;
                     }
 
                     const filePath = path.join(__dirname, `../uploads/${uploadFolder}`, uniqueFilename);
@@ -64,6 +62,52 @@ export async function UploadController(app: FastifyInstance) {
                 statusCode: 500,
                 error: 'Internal Server Error',
                 message: 'An error occurred during file upload.',
+            });
+        }
+    });
+
+    app.delete('/delete/:propertyId', async (request: FastifyRequest, reply: FastifyReply) => {
+        const { propertyId } = request.params as { propertyId: string };
+        const { image } = request.body as { image: string };
+
+        try {
+            const filePath = path.join(__dirname, `../uploads/${uploadFolder}`, path.basename(image));
+
+            // Verifique se o arquivo existe antes de tentar deletá-lo
+            if (fs.existsSync(filePath)) {
+                fs.unlink(filePath, async (err) => {
+                    if (err) {
+                        console.error('Error deleting file from server:', err);
+                        return reply.code(500).send({
+                            statusCode: 500,
+                            error: 'Internal Server Error',
+                            message: 'An error occurred while deleting the file from the server.',
+                        });
+                    }
+
+                    // Remove o registro da imagem do banco de dados
+                    await deletePropertyImage(propertyId, image, reply);
+
+                    reply.code(200).send({
+                        statusCode: 200,
+                        message: 'Image deleted successfully.',
+                    });
+                });
+            } else {
+                // Se o arquivo não existir, apenas remova o registro do banco de dados
+                await deletePropertyImage(propertyId, image, reply);
+
+                reply.code(200).send({
+                    statusCode: 200,
+                    message: 'Image record deleted successfully, but file was not found on server.',
+                });
+            }
+        } catch (error) {
+            console.error('Error during image deletion:', error);
+            reply.code(500).send({
+                statusCode: 500,
+                error: 'Internal Server Error',
+                message: 'An error occurred during image deletion.',
             });
         }
     });

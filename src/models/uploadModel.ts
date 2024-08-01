@@ -22,3 +22,22 @@ export async function uploadPropertyImages(propertyId: string, filename: string,
         throw error; // Rethrow the error to be caught in the outer try-catch
     }
 }
+
+export async function deletePropertyImage(propertyId: string, imageUrl: string, reply: FastifyReply) {
+    try {
+        // Exclui o registro da imagem do banco de dados
+        await prisma.propertyImgs.deleteMany({
+            where: {
+                propertyId: propertyId,
+                url: imageUrl
+            }
+        });
+    } catch (error) {
+        console.error('Error deleting image from database:', error);
+        reply.status(500).send({
+            status: 'error',
+            message: 'Internal server error',
+            error: error instanceof Error ? error.message : 'Unknown error',
+        });
+    }
+}
