@@ -39,93 +39,127 @@ export async function sendMessage(request: FastifyRequest, reply: FastifyReply) 
 
 
 export async function listMyConversations(request: FastifyRequest, reply: FastifyReply) {
-	const { publicId } = request.params as { publicId: string };
+    const { publicId } = request.params as { publicId: string };
 
-	try {
-		// Obtenha todas as mensagens onde o publicId está envolvido
-		const myConversations = await prisma.message.findMany({
-			where: {
-				OR: [
-					{ userFromId: publicId },
-					{ userToId: publicId }
-				]
-			},
-			select: {
-				userFromId: true,
-				userToId: true,
-			}
-		});
+    try {
+        // Obtenha todas as mensagens onde o publicId está envolvido
+        const myConversations = await prisma.message.findMany({
+            where: {
+                OR: [
+                    { userFromId: publicId },
+                    { userToId: publicId }
+                ]
+            },
+            select: {
+                userFromId: true,
+                userToId: true,
+                status: true,
+            }
+        });
 
-		// Crie um conjunto de IDs únicos dos usuários
-		const userIds = new Set<string>();
-		myConversations.forEach(message => {
-			if (message.userFromId !== publicId) userIds.add(message.userFromId);
-			if (message.userToId !== publicId) userIds.add(message.userToId);
-		});
+        // Crie um conjunto de IDs únicos dos usuários
+        const userIds = new Set<string>();
+        myConversations.forEach(message => {
+            if (message.userFromId !== publicId) userIds.add(message.userFromId);
+            if (message.userToId !== publicId) userIds.add(message.userToId);
+        });
 
-		// Converta o conjunto para um array
-		const uniqueUserIds = Array.from(userIds);
+        // Converta o conjunto para um array
+        const uniqueUserIds = Array.from(userIds);
 
-		// Busque os detalhes dos usuários no banco de dados
-		const users = await prisma.user.findMany({
-			where: {
-				publicId: { in: uniqueUserIds }
-			},
-			select: {
-				publicId: true,
-				name: true
-			}
-		});
+        // Busque os detalhes dos usuários no banco de dados
+        const users = await prisma.user.findMany({
+            where: {
+                publicId: { in: uniqueUserIds }
+            },
+            select: {
+                publicId: true,
+                name: true
+            }
+        });
 
-		// Retorne a lista de usuários
-		sendSuccess(reply, 'Users retrieved successfully', users);
-	} catch (error) {
-		sendError(reply, 500, 'Internal server error', error);
-	}
+        // Adicione a contagem de mensagens não lidas
+        const conversationsWithUnreadCount = await Promise.all(users.map(async (user) => {
+            const unreadMessagesCount = await prisma.message.count({
+                where: {
+                    userFromId: user.publicId,
+                    userToId: publicId,
+                    status: 'SENT'
+                }
+            });
+            return {
+                ...user,
+                unreadMessagesCount
+            };
+        }));
+
+        // Retorne a lista de usuários com contagem de mensagens não lidas
+        sendSuccess(reply, 'Users retrieved successfully', conversationsWithUnreadCount);
+    } catch (error) {
+        sendError(reply, 500, 'Internal server error', error);
+    }
 }
 
-export async function listMyMessagesWith(request: FastifyRequest, reply: FastifyReply) {
-	const { myId, contactId } = request.params as { myId: string, contactId: string };
-	try {
-		// Obtenha todas as mensagens onde ambos os IDs estão envolvidos
-		const messages = await prisma.message.findMany({
-			where: {
-				OR: [
-					{
-						AND: [
-							{ userFromId: myId },
-							{ userToId: contactId }
-						]
-					},
-					{
-						AND: [
-							{ userFromId: contactId },
-							{ userToId: myId }
-						]
-					}
-				]
-			},
-			include: {
-				userFrom: {
-					select: {
-						publicId: true,
-						name: true
-					}
-				},
-				userTo: {
-					select: {
-						publicId: true,
-						name: true
-					}
-				}
-			}
-		});
 
-		// Retorne as mensagens com os dados dos usuários
-		sendSuccess(reply, 'Messages retrieved successfully', messages);
-	} catch (error) {
-		sendError(reply, 500, 'Internal server error', error);
-	}
+export async function listMyMessagesWith(request: FastifyRequest, reply: FastifyReply) {
+    const { myId, contactId } = request.params as { myId: string, contactId: string };
+    try {
+        // Obtenha todas as mensagens onde ambos os IDs estão envolvidos
+        const messages = await prisma.message.findMany({
+            where: {
+                OR: [
+                    {
+                        AND: [
+                            { userFromId: myId },
+                            { userToId: contactId }
+                        ]
+                    },
+                    {
+                        AND: [
+                            { userFromId: contactId },
+                            { userToId: myId }
+                        ]
+                    }
+                ]
+            },
+            include: {
+                userFrom: {
+                    select: {
+                        publicId: true,
+                        name: true
+                    }
+                },
+                userTo: {
+                    select: {
+                        publicId: true,
+                        name: true
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: 'asc' // Ordena as mensagens pela data de criação em ordem ascendente
+            }
+        });
+
+        // Marcar mensagens como lidas
+        await prisma.message.updateMany({
+            where: {
+                AND: [
+                    { userFromId: contactId },
+                    { userToId: myId },
+                    { status: "SENT" }
+                ]
+            },
+            data: {
+                status: "READ"
+            }
+        });
+
+        // Retorne as mensagens com os dados dos usuários
+        sendSuccess(reply, 'Messages retrieved and marked as read successfully', messages);
+    } catch (error) {
+        sendError(reply, 500, 'Internal server error', error);
+    }
 }
 
 export async function messageRead(request: FastifyRequest, reply: FastifyReply){
