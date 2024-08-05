@@ -1,6 +1,9 @@
 import fastify, { FastifyRequest, FastifyReply } from "fastify";
 import { deleteProperty, favoriteProperties, getImagesProperty, getProperties, getPropertiesFilter, getPropertyDetails, isFavorite, newProperty, toggleFavoriteProperty, toogleProperty, updateProperty } from "../models/propertyModel";
 import { uploadPropertyImages } from "../services/uploadService";
+import { sendSuccess, sendError } from "../utils/response";
+import prisma from "../lib/prismaConfig";
+
 export async function NewProperty(request: FastifyRequest, reply: FastifyReply) {
     const { userId } = request.body as { userId: string }
     return await newProperty(userId, request, reply)
@@ -105,5 +108,35 @@ export async function UploadPropertyImages(request: FastifyRequest, reply: Fasti
             message: 'Internal server error',
             error: error instanceof Error ? error.message : 'Unknown error',
         });
+    }
+}
+
+
+export async function getMinMaxPrices(request: FastifyRequest, reply: FastifyReply) {
+    try {
+        const minPrice = await prisma.property.findFirst({
+            orderBy: {
+                price: 'asc',
+            },
+            select: {
+                price: true,
+            },
+        });
+
+        const maxPrice = await prisma.property.findFirst({
+            orderBy: {
+                price: 'desc',
+            },
+            select: {
+                price: true,
+            },
+        });
+
+        sendSuccess(reply, 'Prices retrieved successfully', {
+            minPrice: minPrice?.price,
+            maxPrice: maxPrice?.price,
+        });
+    } catch (error) {
+        sendError(reply, 500, 'Internal server error', error);
     }
 }

@@ -99,16 +99,17 @@ export async function getProperties(request: FastifyRequest, reply: FastifyReply
 
 export async function getPropertiesFilter(request: FastifyRequest, reply: FastifyReply) {
     try {
-        const filters: Prisma.PropertyWhereInput = {};
-
-        const { searchTerm, businessType, address, city, county, userId } = request.query as {
+        const { searchTerm, businessType, city, propertyType, minPrice, maxPrice, userId } = request.query as {
             searchTerm?: string;
             businessType?: 'RENT' | 'SELL';
-            address?: string;
             city?: string;
-            county?: string;
-            userId?: string
+            propertyType?: string;
+            minPrice?: string;
+            maxPrice?: string;
+            userId?: string;
         };
+
+        const filters: Prisma.PropertyWhereInput = {};
 
         if (searchTerm && searchTerm.length >= 3) {
             filters.OR = [
@@ -124,7 +125,25 @@ export async function getPropertiesFilter(request: FastifyRequest, reply: Fastif
         if (businessType) {
             filters.businessType = businessType;
         }
-        
+
+        if (city) {
+            filters.city = { contains: city, mode: 'insensitive' };
+        }
+
+        if (propertyType) {
+            filters.propertyType = propertyType as any;
+        }
+
+        if (minPrice || maxPrice) {
+            filters.price = {};
+            if (minPrice) {
+                filters.price.gte = minPrice;
+            }
+            if (maxPrice) {
+                filters.price.lte = maxPrice;
+            }
+        }
+
         if (userId) {
             filters.userId = userId;
         }
@@ -181,14 +200,14 @@ export async function toogleProperty(id: string, request: FastifyRequest, reply:
     try {
         const property = await prisma.property.findFirst({
             where: { publicId: id }
-        })
+        });
         if (property?.active) {
             await prisma.property.update({
                 where: { publicId: id },
                 data: {
                     active: false
                 }
-            })
+            });
             sendSuccess(reply, 'Property deactivated successfully');
         } else {
             await prisma.property.update({
@@ -196,7 +215,7 @@ export async function toogleProperty(id: string, request: FastifyRequest, reply:
                 data: {
                     active: true
                 }
-            })
+            });
             sendSuccess(reply, 'Property activated successfully');
         }
 
@@ -206,7 +225,6 @@ export async function toogleProperty(id: string, request: FastifyRequest, reply:
 }
 
 export async function toggleFavoriteProperty(id: string, userId: string, request: FastifyRequest, reply: FastifyReply) {
-
     try {
         const existingFavorite = await prisma.favoriteProperty.findFirst({
             where: {
@@ -246,7 +264,7 @@ export async function getImagesProperty(id: string, request: FastifyRequest, rep
             where: {
                 propertyId: id
             }
-        })
+        });
         sendSuccess(reply, 'Property images retrieved successfully', images);
     } catch (error) {
         sendError(reply, 500, 'Internal server error', error);
@@ -254,13 +272,12 @@ export async function getImagesProperty(id: string, request: FastifyRequest, rep
 }
 
 export async function favoriteProperties(userId: string, request: FastifyRequest, reply: FastifyReply) {
-
     try {
         const favorites = await prisma.favoriteProperty.findMany({
             where: {
                 userId
             }
-        })
+        });
         sendSuccess(reply, 'Favorite properties retrieved successfully', favorites);
     } catch (error) {
         sendError(reply, 500, 'Internal server error', error);
@@ -281,7 +298,6 @@ export async function getPropertyDetails(propertyId: string, request: FastifyReq
 }
 
 export async function isFavorite(id: string, userId: string, request: FastifyRequest, reply: FastifyReply) {
-
     try {
         const result = await prisma.favoriteProperty.findFirst({
             where: {

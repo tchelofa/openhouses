@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { NewProperty, GetProperties, UpdateProperty, DeleteProperty, ToogleProperty, GetPropertiesFilter, GetImagesProperty, ToggleFavoriteProperty, FavoriteProperties, GetPropertyDetails, IsFavorite } from "../controllers/propertyController";
+import { NewProperty, GetProperties, UpdateProperty, DeleteProperty, ToogleProperty, GetPropertiesFilter, GetImagesProperty, ToggleFavoriteProperty, FavoriteProperties, GetPropertyDetails, IsFavorite, getMinMaxPrices } from "../controllers/propertyController";
 
 export default async function PropertyRoutes(app: FastifyInstance) {
     app.post('/new', NewProperty);
@@ -23,4 +23,6 @@ export default async function PropertyRoutes(app: FastifyInstance) {
     app.put('/toggleFavorite/:id/:userId', ToggleFavoriteProperty); // Rota para favoritar
     
     app.get('/getImages/:id', GetImagesProperty);
+
+    app.get('/prices', getMinMaxPrices);
 }
