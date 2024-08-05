@@ -86,7 +86,7 @@ export async function signin(request: FastifyRequest, reply: FastifyReply) {
                     }
                 })
                 const html = loginFailedEmail(user.name)
-                sendEmail("OpenHouses", "security@openhouses.ie", user.email, "Login Attempt Failed", html, html)
+                sendEmail("OpenHouses Security", "security@openhouses.ie", user.email, "Login Attempt Failed", html, html)
                 return reply.status(401).send({ message: "Email or password invalid!" })
             }
 
