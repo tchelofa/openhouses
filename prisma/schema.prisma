@@ -33,6 +33,7 @@ model User {
   sentMessages      Message[]          @relation("UserFrom")
   receivedMessages  Message[]          @relation("UserTo")
   favorites         FavoriteProperty[]
+  logEmail          LogEmails[]
 
   lastLoginAt       DateTime?
   passwordUpdatedAt DateTime?
@@ -118,7 +119,7 @@ model logsLogin {
   ipAddress   String
   loginStatus loginStatusE
 
-  user   User @relation(fields: [userId], references: [publicId], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [publicId], onDelete: Cascade)
   userId String
 
   updatedAt DateTime @updatedAt
@@ -157,6 +158,24 @@ model Message {
   userTo   User @relation("UserTo", fields: [userToId], references: [publicId], onDelete: Cascade)
 
   @@map("messages")
+}
+
+model LogEmails {
+  id        Int     @id @default(autoincrement())
+  email     String
+  subject   String
+  accepted  String?
+  envelope  String?
+  messageId String?
+  pending   String?
+  rejected  String?
+  response  String?
+  
+
+  userEmail   User   @relation(fields: [userEmailTo], references: [email], onDelete: Cascade)
+  userEmailTo String
+
+  createdAt DateTime @default(now())
 }
 
 enum loginStatusE {

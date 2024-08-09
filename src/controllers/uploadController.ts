@@ -54,14 +54,14 @@ export async function UploadController(app: FastifyInstance) {
 
             reply.code(200).send({
                 statusCode: 200,
-                message: 'Files uploaded successfully.',
+                message: 'success',
             });
         } catch (error) {
             console.error('Error during file upload:', error);
             reply.code(500).send({
                 statusCode: 500,
                 error: 'Internal Server Error',
-                message: 'An error occurred during file upload.',
+                message: 'error',
             });
         }
     });

@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer'
+import prisma from '../prismaConfig';
 
 const transporter = nodemailer.createTransport({
   host: "smtp.hostinger.com",
@@ -7,7 +8,7 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: "marcelo@openhouses.ie",
     pass: "Ro100252@",
-    
+
   },
   tls: {
     // Set to true if the server supports STARTTLS
@@ -16,7 +17,7 @@ const transporter = nodemailer.createTransport({
 });
 
 // async..await is not allowed in global scope, must use a wrapper
-export default async function sendEmail(fromName:string, from: string, to: string, subject:string , text:string, html: string) {
+export default async function sendEmail(fromName: string, from: string, to: string, subject: string, text: string, html: string) {
   // send mail with defined transport object
   const _from = `'"${fromName} " <${from}>'`
   const _subject = `${subject}`
@@ -24,14 +25,39 @@ export default async function sendEmail(fromName:string, from: string, to: strin
   const _html = `${html}`
 
 
-  const info = await transporter.sendMail({
-    from: _from, // sender address
-    to: to, // list of receivers
-    subject: _subject, // Subject line
-    text: _text, // plain text body
-    html: _html, // html body
-  });
+  try {
+    const info = await transporter.sendMail({
+      from: _from, // sender address
+      to: to, // list of receivers
+      subject: _subject, // Subject line
+      text: _text, // plain text body
+      html: _html, // html body
+    });
 
-  // Message sent: <d786aa62-4e0a-070a-47ed-0b0666549519@ethereal.email>
+    // Criando objeto de log
+    const dataLog: any = {
+      userEmailTo: to, // Este é o campo correto a ser utilizado para referenciar o email do usuário
+      email: to,       // Preencha o campo email com o endereço de email
+      subject: subject,
+      accepted: info.accepted ? info.accepted.join(", ") : null,
+      rejected: info.rejected ? info.rejected.join(", ") : null,
+      envelope: info.envelope ? JSON.stringify(info.envelope) : null,
+      messageId: info.messageId || null,
+      pending: info.pending ? info.pending.join(", ") : null,
+      response: info.response || null,
+    };
+
+    const log = await prisma.logEmails.create({
+      data: dataLog
+    });
+
+    console.log("Log de envio de email: ", dataLog);
+    console.log("prisma return: ", log);
+
+  } catch (error) {
+    console.error("Erro ao enviar email:", error);
+    throw error;
+  }
+
 }
 
